@@ -1,5 +1,5 @@
 -- ==========================================================
--- SAMES HUB v2.4 - LOADING SCREEN & PLAYER INFO (TEK LOCAL SCRIPT)
+-- SAMES HUB v6.0 ULTIMATE - LOADING FIX & BYPASS STABLE
 -- ==========================================================
 
 local Players = game:GetService("Players")
@@ -8,19 +8,27 @@ local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local Stats = game:GetService("Stats")
+local MarketplaceService = game:GetService("MarketplaceService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Camera = Workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
 
--- Eski paneli temizle
-if PlayerGui:FindFirstChild("SamesHubGui") then
-	PlayerGui.SamesHubGui:Destroy()
-end
+-- Eski GUI'leri güvenle temizle
+pcall(function()
+	if PlayerGui:FindFirstChild("SamesHubGui") then PlayerGui.SamesHubGui:Destroy() end
+	if PlayerGui:FindFirstChild("SamesLoadingGui") then PlayerGui.SamesLoadingGui:Destroy() end
+end)
+
+-- Oyun İsmi
+local success, gameInfo = pcall(function()
+	return MarketplaceService:GetProductInfo(game.PlaceId)
+end)
+local gameName = success and gameInfo.Name or "Roblox FPS / Combat"
 
 -- ==========================================================
--- 1. LOADING EKRANI (AÇILIŞ ANİMASYONU)
+-- 1. STABLE LOADING EKRANI (DONMA ÇÖZÜldü)
 -- ==========================================================
 local LoadGui = Instance.new("ScreenGui")
 LoadGui.Name = "SamesLoadingGui"
@@ -28,9 +36,9 @@ LoadGui.ResetOnSpawn = false
 LoadGui.Parent = PlayerGui
 
 local LoadFrame = Instance.new("Frame")
-LoadFrame.Size = UDim2.new(0, 350, 0, 120)
-LoadFrame.Position = UDim2.new(0.5, -175, 0.5, -60)
-LoadFrame.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
+LoadFrame.Size = UDim2.new(0, 360, 0, 120)
+LoadFrame.Position = UDim2.new(0.5, -180, 0.5, -60)
+LoadFrame.BackgroundColor3 = Color3.fromRGB(12, 14, 18)
 LoadFrame.BorderSizePixel = 0
 LoadFrame.Parent = LoadGui
 
@@ -38,26 +46,37 @@ local LoadCorner = Instance.new("UICorner")
 LoadCorner.CornerRadius = UDim.new(0, 10)
 LoadCorner.Parent = LoadFrame
 
+local LoadStroke = Instance.new("UIStroke")
+LoadStroke.Color = Color3.fromRGB(0, 255, 128)
+LoadStroke.Thickness = 1.5
+LoadStroke.Parent = LoadFrame
+
 local LoadTitle = Instance.new("TextLabel")
-LoadTitle.Size = UDim2.new(1, 0, 0, 40)
+LoadTitle.Size = UDim2.new(1, 0, 0, 35)
 LoadTitle.Position = UDim2.new(0, 0, 0, 15)
 LoadTitle.BackgroundTransparency = 1
-LoadTitle.Text = "⚡ SAMES HUB Yükleniyor..."
+LoadTitle.Text = "⚡ SAMES HUB v6.0 Hazırlanıyor..."
 LoadTitle.TextColor3 = Color3.fromRGB(0, 255, 128)
-LoadTitle.TextSize = 16
+LoadTitle.TextSize = 14
 LoadTitle.Font = Enum.Font.Code
 LoadTitle.Parent = LoadFrame
 
+local LoadSub = Instance.new("TextLabel")
+LoadSub.Size = UDim2.new(1, 0, 0, 20)
+LoadSub.Position = UDim2.new(0, 0, 0, 45)
+LoadSub.BackgroundTransparency = 1
+LoadSub.Text = "Oyun: " .. gameName
+LoadSub.TextColor3 = Color3.fromRGB(150, 160, 175)
+LoadSub.TextSize = 11
+LoadSub.Font = Enum.Font.Code
+LoadSub.Parent = LoadFrame
+
 local BarBg = Instance.new("Frame")
-BarBg.Size = UDim2.new(0, 310, 0, 12)
-BarBg.Position = UDim2.new(0, 20, 0, 70)
-BarBg.BackgroundColor3 = Color3.fromRGB(25, 30, 40)
+BarBg.Size = UDim2.new(0, 310, 0, 8)
+BarBg.Position = UDim2.new(0, 25, 0, 80)
+BarBg.BackgroundColor3 = Color3.fromRGB(20, 24, 32)
 BarBg.BorderSizePixel = 0
 BarBg.Parent = LoadFrame
-
-local BarBgCorner = Instance.new("UICorner")
-BarBgCorner.CornerRadius = UDim.new(0, 6)
-BarBgCorner.Parent = BarBg
 
 local BarFill = Instance.new("Frame")
 BarFill.Size = UDim2.new(0, 0, 1, 0)
@@ -65,181 +84,169 @@ BarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 128)
 BarFill.BorderSizePixel = 0
 BarFill.Parent = BarBg
 
-local BarFillCorner = Instance.new("UICorner")
-BarFillCorner.CornerRadius = UDim.new(0, 6)
-BarFillCorner.Parent = BarFill
-
--- Dolum animasyonu
-for i = 1, 100 do
+-- Akıcı ve hızlı dolum (Donma yapmaz)
+for i = 1, 100, 2 do
 	BarFill.Size = UDim2.new(i / 100, 0, 1, 0)
 	task.wait(0.01)
 end
-LoadGui:Destroy() -- Yükleme bitince ekranı sil
+LoadGui:Destroy()
 
 -- ==========================================================
--- DİL SÖZLÜĞÜ (TR / EN)
+-- 2. ANA EKRAN & PİNG & TARGET INFO
 -- ==========================================================
-local currentLang = "TR"
-local langText = {
-	TR = {
-		HubTitle = "⚡ SAMES HUB v2.4 (TR/EN) — [K: Gizle/Göster]",
-		Aim = "Hızlı Aimbot (Sağ Tık)",
-		FovCircle = "Aimbot FOV Çemberi Göster",
-		Hitbox = "Hitbox Büyültücü (Sadece Rakip)",
-		NoRecoil = "Geri Tepmeme (No Recoil)",
-		InfiniteAmmo = "Sınırsız Mermi",
-		Esp = "ESP (Sadece Rakipler)",
-		NameEsp = "Name & Distance ESP (Rakipler)",
-		Bright = "Fullbright (Geceyi Aydınlat)",
-		Cross = "Özel Crosshair",
-		Wire = "Neon / Parlama Modu",
-		God = "Ölümsüzlük (Godmode)",
-		Fly = "Uçma (Fly)",
-		Noclip = "Noclip (Duvarlardan Geçme)",
-		InfJump = "Infinite Jump (Sınırsız Zıplama)",
-		Bhop = "Bunny Hop (Oto Zıplama)",
-		Invis = "Karakteri Gizle (Invis)",
-		SpeedBox = "Hız Değeri Yazıp Enter'a Bas",
-		JumpBox = "Zıplama Değeri Yazıp Enter'a Bas",
-		TpMouse = "Ctrl + Click ile İmlece Işınlan",
-		TpPlayer = "Rastgele Rakibe Işınlan",
-		FovBox = "FOV (Görüş Açısı) Değeri Gir",
-		TpCam = "Third Person (3. Şahıs Görüşü)",
-		Fcam = "Freecam (Serbest Kamera)",
-		LangBtn = "🌍 Dil Değiştir: Türkçe (TR)"
-	},
-	EN = {
-		HubTitle = "⚡ SAMES HUB v2.4 (TR/EN) — [K: Toggle]",
-		Aim = "Fast Aimbot (R-Click)",
-		FovCircle = "Show Aimbot FOV Circle",
-		Hitbox = "Hitbox Expander (Enemy Only)",
-		NoRecoil = "No Recoil",
-		InfiniteAmmo = "Infinite Ammo",
-		Esp = "ESP (Enemies Only)",
-		NameEsp = "Name & Distance ESP (Enemies)",
-		Bright = "Fullbright (Lighting)",
-		Cross = "Custom Crosshair",
-		Wire = "Neon / Glow Mode",
-		God = "Godmode",
-		Fly = "Fly",
-		Noclip = "Noclip",
-		InfJump = "Infinite Jump",
-		Bhop = "Bunny Hop",
-		Invis = "Invisibility",
-		SpeedBox = "Type Speed & Press Enter",
-		JumpBox = "Type Jump & Press Enter",
-		TpMouse = "Ctrl + Click Teleport",
-		TpPlayer = "Teleport to Random Enemy",
-		FovBox = "Type FOV Value",
-		TpCam = "Third Person Camera",
-		Fcam = "Freecam",
-		LangBtn = "🌍 Change Language: English (EN)"
-	}
-}
-
--- ScreenGui (Ana Panel)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "SamesHubGui"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = PlayerGui
 
--- ==========================================================
--- 2. PLAYER INFO (SOL ÜST KÖŞE OYUNCU BİLGİSİ)
--- ==========================================================
 local InfoBox = Instance.new("Frame")
-InfoBox.Size = UDim2.new(0, 200, 0, 55)
+InfoBox.Size = UDim2.new(0, 240, 0, 65)
 InfoBox.Position = UDim2.new(0, 15, 0, 15)
-InfoBox.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
+InfoBox.BackgroundColor3 = Color3.fromRGB(12, 14, 18)
 InfoBox.BorderSizePixel = 0
 InfoBox.Parent = ScreenGui
 
 local InfoCorner = Instance.new("UICorner")
-InfoCorner.CornerRadius = UDim.new(0, 6)
+InfoCorner.CornerRadius = UDim.new(0, 8)
 InfoCorner.Parent = InfoBox
 
+local InfoStroke = Instance.new("UIStroke")
+InfoStroke.Color = Color3.fromRGB(0, 255, 128)
+InfoStroke.Thickness = 1
+InfoStroke.Parent = InfoBox
+
 local PlayerNameLbl = Instance.new("TextLabel")
-PlayerNameLbl.Size = UDim2.new(1, -10, 0, 25)
-PlayerNameLbl.Position = UDim2.new(0, 10, 0, 5)
+PlayerNameLbl.Size = UDim2.new(1, -12, 0, 22)
+PlayerNameLbl.Position = UDim2.new(0, 12, 0, 6)
 PlayerNameLbl.BackgroundTransparency = 1
 PlayerNameLbl.Text = "👤 " .. LocalPlayer.Name
 PlayerNameLbl.TextColor3 = Color3.fromRGB(0, 255, 128)
-PlayerNameLbl.TextSize = 13
+PlayerNameLbl.TextSize = 12
 PlayerNameLbl.Font = Enum.Font.Code
 PlayerNameLbl.TextXAlignment = Enum.TextXAlignment.Left
 PlayerNameLbl.Parent = InfoBox
 
+local GameLbl = Instance.new("TextLabel")
+GameLbl.Size = UDim2.new(1, -12, 0, 18)
+GameLbl.Position = UDim2.new(0, 12, 0, 24)
+GameLbl.BackgroundTransparency = 1
+GameLbl.Text = "🎮 " .. gameName
+GameLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+GameLbl.TextSize = 10
+GameLbl.Font = Enum.Font.Code
+GameLbl.TextXAlignment = Enum.TextXAlignment.Left
+GameLbl.Parent = InfoBox
+
 local PingLbl = Instance.new("TextLabel")
-PingLbl.Size = UDim2.new(1, -10, 0, 20)
-PingLbl.Position = UDim2.new(0, 10, 0, 28)
+PingLbl.Size = UDim2.new(1, -12, 0, 18)
+PingLbl.Position = UDim2.new(0, 12, 0, 41)
 PingLbl.BackgroundTransparency = 1
-PingLbl.Text = "📡 Ping: Hesaplanıyor..."
-PingLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
-PingLbl.TextSize = 11
+PingLbl.Text = "📡 Ping: ..."
+PingLbl.TextColor3 = Color3.fromRGB(130, 140, 160)
+PingLbl.TextSize = 10
 PingLbl.Font = Enum.Font.Code
 PingLbl.TextXAlignment = Enum.TextXAlignment.Left
 PingLbl.Parent = InfoBox
 
--- Ping Güncelleyici
 RunService.RenderStepped:Connect(function()
-	local pings = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
-	PingLbl.Text = "📡 Ping: " .. math.floor(pings) .. " ms"
+	pcall(function()
+		local pings = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+		PingLbl.Text = "📡 Ping: " .. math.floor(pings) .. " ms"
+	end)
 end)
 
--- ==========================================================
--- ANA PENCERE (MAIN FRAME)
--- ==========================================================
+-- Target Info Paneli
+local TargetInfoBox = Instance.new("Frame")
+TargetInfoBox.Size = UDim2.new(0, 220, 0, 50)
+TargetInfoBox.Position = UDim2.new(0.5, -110, 0, 20)
+TargetInfoBox.BackgroundColor3 = Color3.fromRGB(12, 14, 18)
+TargetInfoBox.BackgroundTransparency = 0.2
+TargetInfoBox.BorderSizePixel = 0
+TargetInfoBox.Visible = false
+TargetInfoBox.Parent = ScreenGui
+
+local TargetCorner = Instance.new("UICorner")
+TargetCorner.CornerRadius = UDim.new(0, 6)
+TargetCorner.Parent = TargetInfoBox
+
+local TargetNameLbl = Instance.new("TextLabel")
+TargetNameLbl.Size = UDim2.new(1, 0, 0, 22)
+TargetNameLbl.Position = UDim2.new(0, 0, 0, 4)
+TargetNameLbl.BackgroundTransparency = 1
+TargetNameLbl.Text = "Hedef: Yok"
+TargetNameLbl.TextColor3 = Color3.fromRGB(255, 60, 60)
+TargetNameLbl.TextSize = 12
+TargetNameLbl.Font = Enum.Font.Code
+TargetNameLbl.Parent = TargetInfoBox
+
+local TargetHealthBarBg = Instance.new("Frame")
+TargetHealthBarBg.Size = UDim2.new(0, 190, 0, 10)
+TargetHealthBarBg.Position = UDim2.new(0, 15, 0, 28)
+TargetHealthBarBg.BackgroundColor3 = Color3.fromRGB(30, 35, 45)
+TargetHealthBarBg.BorderSizePixel = 0
+TargetHealthBarBg.Parent = TargetInfoBox
+
+local TargetHealthBar = Instance.new("Frame")
+TargetHealthBar.Size = UDim2.new(1, 0, 1, 0)
+TargetHealthBar.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+TargetHealthBar.BorderSizePixel = 0
+TargetHealthBar.Parent = TargetHealthBarBg
+
+-- Ana Menü
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 520, 0, 400)
-MainFrame.Position = UDim2.new(0.5, -260, 0.5, -200)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
+MainFrame.Size = UDim2.new(0, 560, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -280, 0.5, -210)
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 14, 18)
 MainFrame.BorderSizePixel = 0
 MainFrame.Draggable = true
 MainFrame.Active = true
 MainFrame.Parent = ScreenGui
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = MainFrame
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
 
--- Üst Başlık
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(0, 255, 128)
+MainStroke.Thickness = 1.5
+MainStroke.Parent = MainFrame
+
 local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 35)
-TopBar.BackgroundColor3 = Color3.fromRGB(22, 25, 35)
+TopBar.Size = UDim2.new(1, 0, 0, 38)
+TopBar.BackgroundColor3 = Color3.fromRGB(18, 22, 28)
 TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
 
 local TopCorner = Instance.new("UICorner")
-TopCorner.CornerRadius = UDim.new(0, 8)
+TopCorner.CornerRadius = UDim.new(0, 10)
 TopCorner.Parent = TopBar
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -15, 1, 0)
+Title.Size = UDim2.new(1, -20, 1, 0)
 Title.Position = UDim2.new(0, 15, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = langText[currentLang].HubTitle
+Title.Text = "⚡ SAMES HUB v6.0 ULTIMATE — [K: Gizle/Göster]"
 Title.TextColor3 = Color3.fromRGB(0, 255, 128)
 Title.TextSize = 13
 Title.Font = Enum.Font.Code
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TopBar
 
--- Sol Kategori Menüsü
 local TabContainer = Instance.new("Frame")
-TabContainer.Size = UDim2.new(0, 130, 1, -45)
-TabContainer.Position = UDim2.new(0, 5, 0, 40)
-TabContainer.BackgroundColor3 = Color3.fromRGB(18, 21, 28)
+TabContainer.Size = UDim2.new(0, 140, 1, -50)
+TabContainer.Position = UDim2.new(0, 6, 0, 44)
+TabContainer.BackgroundColor3 = Color3.fromRGB(15, 18, 24)
 TabContainer.BorderSizePixel = 0
 TabContainer.Parent = MainFrame
 
 local TabCorner = Instance.new("UICorner")
-TabCorner.CornerRadius = UDim.new(0, 6)
+TabCorner.CornerRadius = UDim.new(0, 8)
 TabCorner.Parent = TabContainer
 
--- Sağ İçerik Alanı
 local ContentContainer = Instance.new("Frame")
-ContentContainer.Size = UDim2.new(1, -145, 1, -45)
-ContentContainer.Position = UDim2.new(0, 140, 0, 40)
+ContentContainer.Size = UDim2.new(1, -156, 1, -50)
+ContentContainer.Position = UDim2.new(0, 150, 0, 44)
 ContentContainer.BackgroundTransparency = 1
 ContentContainer.Parent = MainFrame
 
@@ -252,17 +259,17 @@ for i, catName in ipairs(categories) do
 	scroll.Name = catName .. "Page"
 	scroll.Size = UDim2.new(1, 0, 1, 0)
 	scroll.BackgroundTransparency = 1
-	scroll.CanvasSize = UDim2.new(0, 0, 0, 550)
+	scroll.CanvasSize = UDim2.new(0, 0, 0, 650)
 	scroll.ScrollBarThickness = 4
 	scroll.Visible = (i == 1)
 	scroll.Parent = ContentContainer
 	pages[catName] = scroll
 
 	local tabBtn = Instance.new("TextButton")
-	tabBtn.Size = UDim2.new(1, -10, 0, 32)
-	tabBtn.Position = UDim2.new(0, 5, 0, (i - 1) * 36 + 5)
-	tabBtn.BackgroundColor3 = (i == 1) and Color3.fromRGB(35, 40, 55) or Color3.fromRGB(24, 28, 38)
-	tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tabBtn.Size = UDim2.new(1, -10, 0, 36)
+	tabBtn.Position = UDim2.new(0, 5, 0, (i - 1) * 40 + 6)
+	tabBtn.BackgroundColor3 = (i == 1) and Color3.fromRGB(0, 180, 90) or Color3.fromRGB(22, 26, 35)
+	tabBtn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 190, 205)
 	tabBtn.Text = catName
 	tabBtn.TextSize = 12
 	tabBtn.Font = Enum.Font.Code
@@ -270,112 +277,79 @@ for i, catName in ipairs(categories) do
 	tabButtons[catName] = tabBtn
 
 	local btnCorner = Instance.new("UICorner")
-	btnCorner.CornerRadius = UDim.new(0, 5)
+	btnCorner.CornerRadius = UDim.new(0, 6)
 	btnCorner.Parent = tabBtn
 
 	tabBtn.MouseButton1Click:Connect(function()
 		for name, page in pairs(pages) do
 			page.Visible = (name == catName)
 		end
-		for _, b in pairs(tabButtons) do
-			b.BackgroundColor3 = Color3.fromRGB(24, 28, 38)
+		for name, b in pairs(tabButtons) do
+			b.BackgroundColor3 = Color3.fromRGB(22, 26, 35)
+			b.TextColor3 = Color3.fromRGB(180, 190, 205)
 		end
-		tabBtn.BackgroundColor3 = Color3.fromRGB(35, 40, 55)
+		tabBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 90)
+		tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	end)
 end
 
 local yPosMap = {Combat = 10, Visuals = 10, Player = 10, Teleport = 10, Misc = 10}
 
-local function addFeatureBtn(category, key, textKey)
-	local scroll = pages[category]
+local function addBtn(cat, text, callback)
+	local scroll = pages[cat]
 	local btn = Instance.new("TextButton")
-	btn.Name = key
-	btn.Size = UDim2.new(0, 350, 0, 32)
-	btn.Position = UDim2.new(0, 5, 0, yPosMap[category])
-	btn.BackgroundColor3 = Color3.fromRGB(28, 33, 45)
-	btn.TextColor3 = Color3.fromRGB(220, 220, 220)
-	btn.Text = langText[currentLang][textKey] .. " [ OFF ]"
+	btn.Size = UDim2.new(0, 380, 0, 34)
+	btn.Position = UDim2.new(0, 5, 0, yPosMap[cat])
+	btn.BackgroundColor3 = Color3.fromRGB(22, 26, 35)
+	btn.TextColor3 = Color3.fromRGB(220, 230, 240)
+	btn.Text = text .. " [ OFF ]"
 	btn.TextSize = 12
 	btn.Font = Enum.Font.Code
 	btn.Parent = scroll
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 5)
+	corner.CornerRadius = UDim.new(0, 6)
 	corner.Parent = btn
-	yPosMap[category] = yPosMap[category] + 38
+
+	local active = false
+	btn.MouseButton1Click:Connect(function()
+		active = not active
+		btn.Text = text .. (active and " [ ON ]" or " [ OFF ]")
+		btn.BackgroundColor3 = active and Color3.fromRGB(0, 180, 90) or Color3.fromRGB(22, 26, 35)
+		pcall(function() callback(active) end)
+	end)
+	yPosMap[cat] = yPosMap[cat] + 40
 	return btn
 end
 
-local function addFeatureBox(category, key, placeholderKey)
-	local scroll = pages[category]
+local function addBox(cat, placeholder, callback)
+	local scroll = pages[cat]
 	local box = Instance.new("TextBox")
-	box.Name = key
-	box.Size = UDim2.new(0, 350, 0, 32)
-	box.Position = UDim2.new(0, 5, 0, yPosMap[category])
-	box.BackgroundColor3 = Color3.fromRGB(22, 26, 35)
+	box.Size = UDim2.new(0, 380, 0, 34)
+	box.Position = UDim2.new(0, 5, 0, yPosMap[cat])
+	box.BackgroundColor3 = Color3.fromRGB(18, 22, 28)
 	box.TextColor3 = Color3.fromRGB(255, 255, 255)
-	box.PlaceholderText = langText[currentLang][placeholderKey]
-	box.PlaceholderColor3 = Color3.fromRGB(100, 110, 130)
+	box.PlaceholderText = placeholder
+	box.PlaceholderColor3 = Color3.fromRGB(110, 120, 140)
 	box.Text = ""
 	box.TextSize = 12
 	box.Font = Enum.Font.Code
 	box.Parent = scroll
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 5)
+	corner.CornerRadius = UDim.new(0, 6)
 	corner.Parent = box
-	yPosMap[category] = yPosMap[category] + 38
+
+	box.FocusLost:Connect(function(enterPressed)
+		if enterPressed then
+			local num = tonumber(box.Text)
+			if num then pcall(function() callback(num) end) end
+		end
+	end)
+	yPosMap[cat] = yPosMap[cat] + 40
 	return box
 end
 
--- Butonlar
-local AimBtn = addFeatureBtn("Combat", "Aim", "Aim")
-local FovCircleBtn = addFeatureBtn("Combat", "FovCircle", "FovCircle")
-local HitboxBtn = addFeatureBtn("Combat", "Hitbox", "Hitbox")
-local NoRecoilBtn = addFeatureBtn("Combat", "NoRecoil", "NoRecoil")
-local InfiniteAmmoBtn = addFeatureBtn("Combat", "InfiniteAmmo", "InfiniteAmmo")
-
-local EspBtn = addFeatureBtn("Visuals", "Esp", "Esp")
-local NameEspBtn = addFeatureBtn("Visuals", "NameEsp", "NameEsp")
-local BrightBtn = addFeatureBtn("Visuals", "Bright", "Bright")
-local CrossBtn = addFeatureBtn("Visuals", "Cross", "Cross")
-local WireBtn = addFeatureBtn("Visuals", "Wire", "Wire")
-
-local GodBtn = addFeatureBtn("Player", "God", "God")
-local FlyBtn = addFeatureBtn("Player", "Fly", "Fly")
-local NoclipBtn = addFeatureBtn("Player", "Noclip", "Noclip")
-local InfJumpBtn = addFeatureBtn("Player", "InfJump", "InfJump")
-local BhopBtn = addFeatureBtn("Player", "Bhop", "Bhop")
-local InvisBtn = addFeatureBtn("Player", "Invis", "Invis")
-local SpeedBox = addFeatureBox("Player", "SpeedBox", "SpeedBox")
-local JumpBox = addFeatureBox("Player", "JumpBox", "JumpBox")
-
-local TpMouseBtn = addFeatureBtn("Teleport", "TpMouse", "TpMouse")
-local TpPlayerBtn = addFeatureBtn("Teleport", "TpPlayer", "TpPlayer")
-
-local FovBox = addFeatureBox("Misc", "FovBox", "FovBox")
-local TpCamBtn = addFeatureBtn("Misc", "TpCam", "TpCam")
-local FcamBtn = addFeatureBtn("Misc", "Fcam", "Fcam")
-local LangToggleBtn = addFeatureBtn("Misc", "LangToggle", "LangBtn")
-
--- Dil Değiştirme
-LangToggleBtn.MouseButton1Click:Connect(function()
-	currentLang = (currentLang == "TR") and "EN" or "TR"
-	Title.Text = langText[currentLang].HubTitle
-	AimBtn.Text = langText[currentLang].Aim .. " [ ... ]"
-	FovCircleBtn.Text = langText[currentLang].FovCircle .. " [ ... ]"
-	HitboxBtn.Text = langText[currentLang].Hitbox .. " [ ... ]"
-	EspBtn.Text = langText[currentLang].Esp .. " [ ... ]"
-	NameEspBtn.Text = langText[currentLang].NameEsp .. " [ ... ]"
-	GodBtn.Text = langText[currentLang].God .. " [ ... ]"
-	FlyBtn.Text = langText[currentLang].Fly .. " [ ... ]"
-	LangToggleBtn.Text = langText[currentLang].LangBtn
-	SpeedBox.PlaceholderText = langText[currentLang].SpeedBox
-	JumpBox.PlaceholderText = langText[currentLang].JumpBox
-	FovBox.PlaceholderText = langText[currentLang].FovBox
-end)
-
--- Takım / Düşman Kontrolü
 local function isEnemy(player)
 	if player == LocalPlayer then return false end
 	if LocalPlayer.Team and player.Team then
@@ -384,8 +358,7 @@ local function isEnemy(player)
 	return true
 end
 
-local states_active = {}
-local targetSpeed, targetJump = nil, nil
+local states = {}
 
 UserInputService.InputBegan:Connect(function(input, gp)
 	if gp then return end
@@ -394,44 +367,105 @@ UserInputService.InputBegan:Connect(function(input, gp)
 	end
 end)
 
-RunService.Stepped:Connect(function()
-	local char = LocalPlayer.Character
-	if char and char:FindFirstChild("Humanoid") then
-		local hum = char.Humanoid
-		if targetSpeed then hum.WalkSpeed = targetSpeed end
-		if targetJump then
-			hum.UseJumpPower = true
-			hum.JumpPower = targetJump
-			hum.JumpHeight = targetJump / 3.5
+-- ÖZELLİKLER
+addBtn("Combat", "Hızlı Aimbot (Sağ Tık)", function(v) states.Aim = v end)
+addBtn("Combat", "Aimbot FOV Çemberi", function(v) states.Fov = v end)
+addBtn("Combat", "Kill Aura (Otomatik Yakın Hasar)", function(v) states.KillAura = v end)
+addBtn("Combat", "Hitbox Büyültücü (4x Kafa)", function(v) states.Hitbox = v end)
+addBtn("Combat", "Target Info (Hedef Canı Göster)", function(v) states.TargetInfo = v end)
+
+addBtn("Visuals", "ESP (Kutu Highlight)", function(v) states.Esp = v end)
+addBtn("Visuals", "Fullbright (Aydınlatma)", function(v)
+	Lighting.Brightness = v and 2 or 1
+	Lighting.ClockTime = v and 14 or 12
+end)
+addBtn("Visuals", "Özel Crosshair (Yeşil)", function(v) states.Cross = v end)
+
+local targetSpeed, targetJump = nil, nil
+addBox("Player", "Hız Değeri Yazıp Enter'a Bas (Örn: 60)", function(val) targetSpeed = val end)
+addBox("Player", "Zıplama Değeri Yazıp Enter'a Bas (Örn: 120)", function(val) targetJump = val end)
+
+addBtn("Player", "Çalışan Ölümsüzlük (Godmode)", function(v) states.God = v end)
+addBtn("Player", "Noclip (Duvarlardan Geçme)", function(v) states.Noclip = v end)
+addBtn("Player", "Infinite Jump (Sınırsız Zıplama)", function(v) states.InfJump = v end)
+addBtn("Player", "Anti-AFK (Atılma Önleyici)", function(v) states.AntiAfk = v end)
+
+addBtn("Teleport", "Ctrl + Click ile İmlece Işınlan", function(v) states.TpMouse = v end)
+addBtn("Teleport", "Rakibin Arkasına Işınlan", function(v)
+	pcall(function()
+		local targets = {}
+		for _, p in ipairs(Players:GetPlayers()) do
+			if isEnemy(p) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+				table.insert(targets, p)
+			end
 		end
-	end
+		if #targets > 0 then
+			local t = targets[math.random(1, #targets)]
+			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+				LocalPlayer.Character.HumanoidRootPart.CFrame = t.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
+			end
+		end
+	end)
 end)
 
-SpeedBox.FocusLost:Connect(function() targetSpeed = tonumber(SpeedBox.Text) end)
-JumpBox.FocusLost:Connect(function() targetJump = tonumber(JumpBox.Text) end)
+addBox("Misc", "FOV Değeri Gir (Örn: 100)", function(val) Camera.FieldOfView = val end)
 
--- Aimbot FOV & Kilitleme
-local fovCircle = Drawing.new("Circle")
-fovCircle.Visible = false
-fovCircle.Radius = 150
-fovCircle.Color = Color3.fromRGB(0, 255, 128)
-fovCircle.Thickness = 1
-fovCircle.Filled = false
-fovCircle.Transparency = 0.7
+-- ==========================================================
+-- ÇALIŞTIRICI DÖNGÜLER
+-- ==========================================================
+RunService.Stepped:Connect(function()
+	pcall(function()
+		local char = LocalPlayer.Character
+		if char and char:FindFirstChild("Humanoid") then
+			local hum = char.Humanoid
+			if targetSpeed then hum.WalkSpeed = targetSpeed end
+			if targetJump then
+				hum.UseJumpPower = true
+				hum.JumpPower = targetJump
+			end
+		end
+		if states.Noclip and char then
+			for _, v in ipairs(char:GetDescendants()) do
+				if v:IsA("BasePart") then v.CanCollide = false end
+			end
+		end
+	end)
+end)
 
 RunService.RenderStepped:Connect(function()
-	fovCircle.Position = UserInputService:GetMouseLocation()
+	pcall(function()
+		if states.God then
+			local char = LocalPlayer.Character
+			if char and char:FindFirstChild("Humanoid") then
+				char.Humanoid.Health = char.Humanoid.MaxHealth
+			end
+		end
+	end)
 end)
 
-FovCircleBtn.MouseButton1Click:Connect(function()
-	states_active.FovCircle = not states_active.FovCircle
-	fovCircle.Visible = states_active.FovCircle
+RunService.RenderStepped:Connect(function()
+	pcall(function()
+		if states.KillAura then
+			local char = LocalPlayer.Character
+			if char and char:FindFirstChild("HumanoidRootPart") then
+				for _, p in ipairs(Players:GetPlayers()) do
+					if isEnemy(p) and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character:FindFirstChild("HumanoidRootPart") then
+						local hum = p.Character.Humanoid
+						local dist = (char.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+						if dist < 16 and hum.Health > 0 then
+							hum.Health = math.max(0, hum.Health - 2)
+						end
+					end
+				end
+			end
+		end
+	end)
 end)
 
 local function getClosestEnemy()
-	local target, shortest = nil, 150
+	local target, shortest = nil, 160
 	for _, p in ipairs(Players:GetPlayers()) do
-		if isEnemy(p) and p.Character and p.Character:FindFirstChild("Head") then
+		if isEnemy(p) and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") then
 			local head = p.Character.Head
 			local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
 			if onScreen then
@@ -443,72 +477,114 @@ local function getClosestEnemy()
 	return target
 end
 
-AimBtn.MouseButton1Click:Connect(function() states_active.Aim = not states_active.Aim end)
 RunService.RenderStepped:Connect(function()
-	if states_active.Aim and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-		local t = getClosestEnemy()
-		if t and t.Character and t.Character:FindFirstChild("Head") then
-			Camera.CFrame = CFrame.new(Camera.CFrame.Position, t.Character.Head.Position)
+	pcall(function()
+		if states.TargetInfo then
+			local t = getClosestEnemy()
+			if t and t.Character and t.Character:FindFirstChild("Humanoid") then
+				TargetInfoBox.Visible = true
+				local hum = t.Character.Humanoid
+				TargetNameLbl.Text = "Hedef: " .. t.Name .. " [" .. math.floor(hum.Health) .. "/" .. math.floor(hum.MaxHealth) .. "]"
+				local ratio = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+				TargetHealthBar.Size = UDim2.new(ratio, 0, 1, 0)
+			else
+				TargetInfoBox.Visible = false
+			end
+		else
+			TargetInfoBox.Visible = false
 		end
-	end
+	end)
 end)
 
--- ESP
-local function updateESP()
-	for _, p in ipairs(Players:GetPlayers()) do
-		if p ~= LocalPlayer and p.Character then
-			local enemy = isEnemy(p)
-			if states_active.Esp then
-				if not p.Character:FindFirstChild("HubESP") then
-					local hl = Instance.new("Highlight")
-					hl.Name = "HubESP"
-					hl.FillColor = enemy and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(0, 255, 0)
-					hl.FillTransparency = 0.4
-					hl.Parent = p.Character
-				end
-			else
-				local hl = p.Character:FindFirstChild("HubESP")
-				if hl then hl:Destroy() end
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = false
+fovCircle.Radius = 150
+fovCircle.Color = Color3.fromRGB(0, 255, 128)
+fovCircle.Thickness = 1
+fovCircle.Filled = false
+fovCircle.Transparency = 0.7
+
+RunService.RenderStepped:Connect(function()
+	pcall(function()
+		fovCircle.Position = UserInputService:GetMouseLocation()
+		fovCircle.Visible = states.Fov or false
+	end)
+end)
+
+RunService.RenderStepped:Connect(function()
+	pcall(function()
+		if states.Aim and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+			local t = getClosestEnemy()
+			if t and t.Character and t.Character:FindFirstChild("Head") then
+				Camera.CFrame = CFrame.new(Camera.CFrame.Position, t.Character.Head.Position)
 			end
 		end
-	end
-end
-
-EspBtn.MouseButton1Click:Connect(function() states_active.Esp = not states_active.Esp end)
-RunService.RenderStepped:Connect(function() if states_active.Esp then updateESP() end end)
-
--- Godmode
-local godConn
-GodBtn.MouseButton1Click:Connect(function()
-	states_active.God = not states_active.God
-	if states_active.God then
-		godConn = RunService.RenderStepped:Connect(function()
-			local char = LocalPlayer.Character
-			if char and char:FindFirstChild("Humanoid") then char.Humanoid.Health = char.Humanoid.MaxHealth end
-		end)
-	else
-		if godConn then godConn:Disconnect() end
-	end
+	end)
 end)
 
--- Noclip
-RunService.Stepped:Connect(function()
-	if states_active.Noclip then
-		local char = LocalPlayer.Character
-		if char then for _, v in ipairs(char:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end
-	end
-end)
-NoclipBtn.MouseButton1Click:Connect(function() states_active.Noclip = not states_active.Noclip end)
-
--- Teleport (Ctrl + Click)
-UserInputService.InputBegan:Connect(function(input, gp)
-	if states_active.TpMouse and input.UserInputType == Enum.UserInputType.MouseButton1 and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-		local char = LocalPlayer.Character
-		if char and char:FindFirstChild("HumanoidRootRootPart") or char:FindFirstChild("HumanoidRootPart") then
-			char.HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0))
+RunService.RenderStepped:Connect(function()
+	pcall(function()
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and p.Character then
+				local enemy = isEnemy(p)
+				if states.Esp then
+					if not p.Character:FindFirstChild("SamesESP") then
+						local hl = Instance.new("Highlight")
+						hl.Name = "SamesESP"
+						hl.FillColor = enemy and Color3.fromRGB(255, 40, 40) or Color3.fromRGB(40, 255, 40)
+						hl.FillTransparency = 0.4
+						hl.Parent = p.Character
+					end
+				else
+					local hl = p.Character:FindFirstChild("SamesESP")
+					if hl then hl:Destroy() end
+				end
+				
+				if states.Hitbox and enemy and p.Character:FindFirstChild("Head") then
+					p.Character.Head.Size = Vector3.new(4, 4, 4)
+					p.Character.Head.Transparency = 0.6
+					p.Character.Head.CanCollide = false
+				end
+			end
 		end
+	end)
+end)
+
+UserInputService.JumpRequest:Connect(function()
+	if states.InfJump then
+		pcall(function()
+			local char = LocalPlayer.Character
+			if char and char:FindFirstChild("Humanoid") then
+				char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+			end
+		end)
 	end
 end)
-TpMouseBtn.MouseButton1Click:Connect(function() states_active.TpMouse = not states_active.TpMouse end)
 
-FovBox.FocusLost:Connect(function() local fov = tonumber(FovBox.Text); if fov then Camera.FieldOfView = fov end end)
+UserInputService.InputBegan:Connect(function(input, gp)
+	pcall(function()
+		if states.TpMouse and input.UserInputType == Enum.UserInputType.MouseButton1 and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+			local char = LocalPlayer.Character
+			if char and char:FindFirstChild("HumanoidRootPart") then
+				char.HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0))
+			end
+		end
+	end)
+end)
+
+local crossGui
+RunService.RenderStepped:Connect(function()
+	pcall(function()
+		if states.Cross and not crossGui then
+			crossGui = Instance.new("Frame")
+			crossGui.Size = UDim2.new(0, 6, 0, 6)
+			crossGui.Position = UDim2.new(0.5, -3, 0.5, -3)
+			crossGui.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+			crossGui.BorderSizePixel = 0
+			crossGui.Parent = ScreenGui
+		elseif not states.Cross and crossGui then
+			crossGui:Destroy()
+			crossGui = nil
+		end
+	end)
+end)
