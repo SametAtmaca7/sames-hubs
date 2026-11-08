@@ -1,0 +1,972 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local camera = Workspace.CurrentCamera
+
+local flying = false
+local speed = 50
+local bv, bg, connection
+local minimized = false
+
+-- Hile & Ekstra Değişkenler
+local noclipActive = false
+local noclipConnection = nil
+local superJumpActive = false
+local speedBoostActive = false
+local infiniteJumpActive = false
+local bhopActive = false
+local bHopConnection = nil
+local invisibleActive = false
+local fullbrightActive = false
+local fovActive = false
+local spinbotActive = false
+local spinConnection = nil
+local clickTpActive = false
+local clickTpConnection = nil
+local floatActive = false
+local floatConnection = nil
+
+-- Özel Renkli Aura, Highlight ve Rengarenk Arka Plan
+local auraActive = false
+local highlightInstance = nil
+local auraParticles = {}
+local currentCustomColor = Color3.fromRGB(0, 120, 255)
+
+local rainbowActive = false
+local rainbowConnection = nil
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "OzikoHubGUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+--------------------------------------------------------------------------------
+-- ÖZEL SES EFEKTLERİ
+--------------------------------------------------------------------------------
+local function playSound(soundId, volume)
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://" .. tostring(soundId)
+    sound.Volume = volume or 0.6
+    sound.Parent = SoundService
+    sound:Play()
+    sound.Ended:Connect(function()
+        sound:Destroy()
+    end)
+end
+
+local BUTTON_SOUND = 5852470908       
+local OPENING_SOUND = 90864973986637  
+
+--------------------------------------------------------------------------------
+-- TAKILMAYAN LOADING SCREEN (Oziko Hub Tarzı)
+--------------------------------------------------------------------------------
+local loadScreen = Instance.new("Frame")
+loadScreen.Size = UDim2.fromScale(1, 1)
+loadScreen.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+loadScreen.Parent = gui
+
+local loadBox = Instance.new("Frame")
+loadBox.Size = UDim2.fromOffset(280, 140)
+loadBox.Position = UDim2.new(0.5, -140, 0.5, -70)
+loadBox.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
+loadBox.Parent = loadScreen
+
+local loadBoxCorner = Instance.new("UICorner")
+loadBoxCorner.CornerRadius = UDim.new(0, 12)
+loadBoxCorner.Parent = loadBox
+
+local loadTitle = Instance.new("TextLabel")
+loadTitle.Size = UDim2.new(1, 0, 0, 35)
+loadTitle.Position = UDim2.fromOffset(0, 15)
+loadTitle.Text = "⚡ OZIKO HUB"
+loadTitle.TextColor3 = Color3.new(1,1,1)
+loadTitle.TextSize = 18
+loadTitle.Font = Enum.Font.GothamBold
+loadTitle.BackgroundTransparency = 1
+loadTitle.Parent = loadBox
+
+local loadStatus = Instance.new("TextLabel")
+loadStatus.Size = UDim2.new(1, 0, 0, 25)
+loadStatus.Position = UDim2.fromOffset(0, 52)
+loadStatus.Text = "Sistemler yükleniyor..."
+loadStatus.TextColor3 = Color3.fromRGB(140, 150, 180)
+loadStatus.TextSize = 13
+loadStatus.Font = Enum.Font.GothamMedium
+loadStatus.BackgroundTransparency = 1
+loadStatus.Parent = loadBox
+
+local barBg = Instance.new("Frame")
+barBg.Size = UDim2.new(0, 230, 0, 6)
+barBg.Position = UDim2.new(0.5, -115, 0, 96)
+barBg.BackgroundColor3 = Color3.fromRGB(35, 38, 52)
+barBg.Parent = loadBox
+
+local barBgCorner = Instance.new("UICorner")
+barBgCorner.CornerRadius = UDim.new(1, 0)
+barBgCorner.Parent = barBg
+
+local barFill = Instance.new("Frame")
+barFill.Size = UDim2.new(0, 0, 1, 0)
+barFill.BackgroundColor3 = Color3.fromRGB(65, 100, 220)
+barFill.Parent = barBg
+
+local barFillCorner = Instance.new("UICorner")
+barFillCorner.CornerRadius = UDim.new(1, 0)
+barFillCorner.Parent = barFill
+
+--------------------------------------------------------------------------------
+-- WELCOME "SAMET" EKRANI (Profil Fotoğraflı)
+--------------------------------------------------------------------------------
+local welcomeContainer = Instance.new("Frame")
+welcomeContainer.Size = UDim2.fromOffset(360, 100)
+welcomeContainer.Position = UDim2.new(0.5, -180, 0.5, -50)
+welcomeContainer.BackgroundTransparency = 1
+welcomeContainer.Visible = false
+welcomeContainer.Parent = gui
+
+local avatarImage = Instance.new("ImageLabel")
+avatarImage.Size = UDim2.fromOffset(70, 70)
+avatarImage.Position = UDim2.new(0, 15, 0.5, -35)
+avatarImage.BackgroundColor3 = Color3.fromRGB(30, 32, 45)
+avatarImage.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+avatarImage.ImageTransparency = 1
+avatarImage.Parent = welcomeContainer
+
+local avatarCorner = Instance.new("UICorner")
+avatarCorner.CornerRadius = UDim.new(1, 0)
+avatarCorner.Parent = avatarImage
+
+local avatarStroke = Instance.new("UIStroke")
+avatarStroke.Color = Color3.fromRGB(65, 100, 220)
+avatarStroke.Thickness = 2
+avatarStroke.Parent = avatarImage
+
+local welcomeText = Instance.new("TextLabel")
+welcomeText.Size = UDim2.new(1, -95, 1, 0)
+welcomeText.Position = UDim2.fromOffset(95, 0)
+welcomeText.Text = "Welcome, " .. player.Name
+welcomeText.TextColor3 = Color3.fromRGB(240, 245, 255)
+welcomeText.TextSize = 22
+welcomeText.Font = Enum.Font.GothamBold
+welcomeText.BackgroundTransparency = 1
+welcomeText.TextXAlignment = Enum.TextXAlignment.Left
+welcomeText.TextTransparency = 1
+welcomeText.Parent = welcomeContainer
+
+--------------------------------------------------------------------------------
+-- ANA FRAME VE 4'LÜ SEKME SİSTEMİ (Player, Cheats, Misc, Info)
+--------------------------------------------------------------------------------
+local frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(50, 50)
+frame.Position = UDim2.new(0.5, -25, 0.5, -25)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
+frame.Active = true
+frame.Draggable = true
+frame.Visible = false
+frame.BackgroundTransparency = 1
+frame.ClipsDescendants = true
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = frame
+
+-- Başlık
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -90, 0, 35)
+title.Position = UDim2.fromOffset(10, 3)
+title.Text = "⚡ OZIKO HUB V2"
+title.TextColor3 = Color3.new(1,1,1)
+title.TextSize = 16
+title.Font = Enum.Font.GothamBold
+title.BackgroundTransparency = 1
+title.TextTransparency = 1
+title.Parent = frame
+
+-- Çarpı butonu
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromOffset(26, 26)
+close.Position = UDim2.new(1, -32, 0, 5)
+close.Text = "×"
+close.TextSize = 20
+close.TextColor3 = Color3.new(1,1,1)
+close.BackgroundColor3 = Color3.fromRGB(210, 55, 65)
+close.BackgroundTransparency = 1
+close.TextTransparency = 1
+close.Parent = frame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = close
+
+-- Küçültme butonu
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.fromOffset(26, 26)
+minimize.Position = UDim2.new(1, -62, 0, 5)
+minimize.Text = "−"
+minimize.TextSize = 16
+minimize.TextColor3 = Color3.new(1,1,1)
+minimize.BackgroundColor3 = Color3.fromRGB(65, 100, 220)
+minimize.BackgroundTransparency = 1
+minimize.TextTransparency = 1
+minimize.Parent = frame
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minimize
+
+--------------------------------------------------------------------------------
+-- SEKME BUTONLARI (4 Sekme: Player, Cheats, Misc, Info)
+--------------------------------------------------------------------------------
+local tabContainer = Instance.new("Frame")
+tabContainer.Size = UDim2.new(1, -20, 0, 28)
+tabContainer.Position = UDim2.fromOffset(10, 38)
+tabContainer.BackgroundTransparency = 1
+tabContainer.Visible = false
+tabContainer.Parent = frame
+
+local function createTabButton(text, xPos, sizeX)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0, sizeX, 1, 0)
+    b.Position = UDim2.fromOffset(xPos, 0)
+    b.Text = text
+    b.TextSize = 10
+    b.TextColor3 = Color3.fromRGB(160, 170, 195)
+    b.Font = Enum.Font.GothamBold
+    b.BackgroundColor3 = Color3.fromRGB(35, 38, 52)
+    b.Parent = tabContainer
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = b
+    return b
+end
+
+local tab1Btn = createTabButton("Player", 0, 55)
+local tab2Btn = createTabButton("Cheats", 60, 55)
+local tab3Btn = createTabButton("Misc", 120, 55)
+local tab4Btn = createTabButton("Info", 180, 55)
+
+--------------------------------------------------------------------------------
+-- SAYFALAR
+--------------------------------------------------------------------------------
+local pageContainer = Instance.new("Frame")
+pageContainer.Size = UDim2.new(1, -20, 1, -75)
+pageContainer.Position = UDim2.fromOffset(10, 70)
+pageContainer.BackgroundTransparency = 1
+pageContainer.Visible = false
+pageContainer.Parent = frame
+
+local page1 = Instance.new("ScrollingFrame")
+page1.Size = UDim2.new(1, 0, 1, 0)
+page1.BackgroundTransparency = 1
+page1.CanvasSize = UDim2.fromOffset(0, 250)
+page1.ScrollBarThickness = 4
+page1.Visible = true
+page1.Parent = pageContainer
+
+local page2 = Instance.new("ScrollingFrame")
+page2.Size = UDim2.new(1, 0, 1, 0)
+page2.BackgroundTransparency = 1
+page2.CanvasSize = UDim2.fromOffset(0, 250)
+page2.ScrollBarThickness = 4
+page2.Visible = false
+page2.Parent = pageContainer
+
+local page3 = Instance.new("ScrollingFrame")
+page3.Size = UDim2.new(1, 0, 1, 0)
+page3.BackgroundTransparency = 1
+page3.CanvasSize = UDim2.fromOffset(0, 320)
+page3.ScrollBarThickness = 4
+page3.Visible = false
+page3.Parent = pageContainer
+
+local page4 = Instance.new("Frame")
+page4.Size = UDim2.new(1, 0, 1, 0)
+page4.BackgroundTransparency = 1
+page4.Visible = false
+page4.Parent = pageContainer
+
+--------------------------------------------------------------------------------
+-- BUTON OLUŞTURUCU FONKSİYON
+--------------------------------------------------------------------------------
+local function button(text, y, parent)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -5, 0, 28)
+    b.Position = UDim2.fromOffset(0, y)
+    b.Text = text
+    b.TextSize = 11
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Font = Enum.Font.GothamBold
+    b.BackgroundColor3 = Color3.fromRGB(65, 100, 220)
+    b.Parent = parent
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = b
+
+    return b
+end
+
+-- SAYFA 1: Player
+local flyButton = button("FLY: OFF", 0, page1)
+local plusButton = button("SPEED +", 32, page1)
+local minusButton = button("SPEED -", 64, page1)
+local auraButton = button("ÖZEL AURA: OFF", 96, page1)
+local colorButton = button("RENK DEĞİŞTİR (MAVİ)", 128, page1)
+local rainbowButton = button("ARKAPLAN RENGARENK: OFF", 160, page1)
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(1, 0, 0, 22)
+speedLabel.Position = UDim2.fromOffset(0, 194)
+speedLabel.Text = "Speed: 50"
+speedLabel.TextColor3 = Color3.new(1,1,1)
+speedLabel.BackgroundTransparency = 1
+speedLabel.TextSize = 12
+speedLabel.Font = Enum.Font.GothamSemibold
+speedLabel.Parent = page1
+
+-- SAYFA 2: Cheats
+local noclipButton = button("NOCLIP: OFF", 0, page2)
+local jumpButton = button("SUPER JUMP: OFF", 32, page2)
+local boostButton = button("SPEED BOOST: OFF", 64, page2)
+local infJumpButton = button("INFINITE JUMP: OFF", 96, page2)
+local bhopButton = button("BHOP: OFF", 128, page2)
+
+-- SAYFA 3: Misc
+local gravityNormalBtn = button("YERÇEKİMİ: NORMAL", 0, page3)
+local gravityMoonBtn = button("YERÇEKİMİ: AY (DÜŞÜK)", 32, page3)
+local gravityHeavyBtn = button("YERÇEKİMİ: AĞIR", 64, page3)
+local invisButton = button("GÖRÜNMEZLİK (INVIS): OFF", 96, page3)
+local fullbrightButton = button("FULLBRIGHT (GECE GÖRÜŞÜ): OFF", 128, page3)
+local fovButton = button("WIDESCREEN FOV: OFF", 160, page3)
+local spinButton = button("SPINBOT: OFF", 192, page3)
+local clickTpButton = button("CLICK TP (CTRL+CLICK): OFF", 224, page3)
+local floatButton = button("HAVADA ASILI KAL (FLOAT): OFF", 256, page3)
+local resetCharButton = button("KARAKTERİ YENİLE (RESET)", 288, page3)
+
+-- SAYFA 4: Info (Sahibi: Ozi, Yapımcısı: Ozi, Kodlayıcısı: Samet)
+local infoTitle = Instance.new("TextLabel")
+infoTitle.Size = UDim2.new(1, 0, 0, 22)
+infoTitle.Position = UDim2.fromOffset(0, 10)
+infoTitle.Text = "👑 OZIKO BİLGİ"
+infoTitle.TextColor3 = Color3.fromRGB(220, 230, 250)
+infoTitle.TextSize = 14
+infoTitle.Font = Enum.Font.GothamBold
+infoTitle.BackgroundTransparency = 1
+infoTitle.TextXAlignment = Enum.TextXAlignment.Left
+infoTitle.Parent = page4
+
+local ownerLabel = Instance.new("TextLabel")
+ownerLabel.Size = UDim2.new(1, 0, 0, 22)
+ownerLabel.Position = UDim2.fromOffset(0, 38)
+ownerLabel.Text = "• Sahibi: Ozi"
+ownerLabel.TextColor3 = Color3.fromRGB(180, 195, 220)
+ownerLabel.TextSize = 12
+ownerLabel.Font = Enum.Font.GothamMedium
+ownerLabel.BackgroundTransparency = 1
+ownerLabel.TextXAlignment = Enum.TextXAlignment.Left
+ownerLabel.Parent = page4
+
+local makerLabel = Instance.new("TextLabel")
+makerLabel.Size = UDim2.new(1, 0, 0, 22)
+makerLabel.Position = UDim2.fromOffset(0, 64)
+makerLabel.Text = "• Yapımcısı: Ozi"
+makerLabel.TextColor3 = Color3.fromRGB(180, 195, 220)
+makerLabel.TextSize = 12
+makerLabel.Font = Enum.Font.GothamMedium
+makerLabel.BackgroundTransparency = 1
+makerLabel.TextXAlignment = Enum.TextXAlignment.Left
+makerLabel.Parent = page4
+
+local coderLabel = Instance.new("TextLabel")
+coderLabel.Size = UDim2.new(1, 0, 0, 22)
+coderLabel.Position = UDim2.fromOffset(0, 90)
+coderLabel.Text = "• Kodlayıcısı: Samet"
+coderLabel.TextColor3 = Color3.fromRGB(180, 195, 220)
+coderLabel.TextSize = 12
+coderLabel.Font = Enum.Font.GothamMedium
+coderLabel.BackgroundTransparency = 1
+coderLabel.TextXAlignment = Enum.TextXAlignment.Left
+coderLabel.Parent = page4
+
+--------------------------------------------------------------------------------
+-- SEKME GEÇİŞ MANTIĞI
+--------------------------------------------------------------------------------
+local function switchTab(selectedTab)
+    playSound(BUTTON_SOUND, 0.5)
+    
+    page1.Visible = (selectedTab == 1)
+    page2.Visible = (selectedTab == 2)
+    page3.Visible = (selectedTab == 3)
+    page4.Visible = (selectedTab == 4)
+    
+    local activeColor = Color3.fromRGB(65, 100, 220)
+    local inactiveColor = Color3.fromRGB(35, 38, 52)
+    
+    tab1Btn.BackgroundColor3 = (selectedTab == 1) and activeColor or inactiveColor
+    tab2Btn.BackgroundColor3 = (selectedTab == 2) and activeColor or inactiveColor
+    tab3Btn.BackgroundColor3 = (selectedTab == 3) and activeColor or inactiveColor
+    tab4Btn.BackgroundColor3 = (selectedTab == 4) and activeColor or inactiveColor
+end
+
+tab1Btn.MouseButton1Click:Connect(function() switchTab(1) end)
+tab2Btn.MouseButton1Click:Connect(function() switchTab(2) end)
+tab3Btn.MouseButton1Click:Connect(function() switchTab(3) end)
+tab4Btn.MouseButton1Click:Connect(function() switchTab(4) end)
+
+--------------------------------------------------------------------------------
+-- ÖZEL RENKLİ AURA & HIGHLIGHT SİSTEMİ
+--------------------------------------------------------------------------------
+local colorList = {
+    {name = "MAVİ", color = Color3.fromRGB(0, 120, 255)},
+    {name = "KIRMIZI", color = Color3.fromRGB(255, 40, 40)},
+    {name = "YEŞİL", color = Color3.fromRGB(40, 255, 90)},
+    {name = "MOR", color = Color3.fromRGB(170, 50, 255)},
+    {name = "SARI", color = Color3.fromRGB(255, 220, 0)}
+}
+local colorIndex = 1
+
+local function updateAuraVisuals()
+    if not auraActive then return end
+    local char = player.Character
+    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+
+    if highlightInstance then
+        highlightInstance.FillColor = currentCustomColor
+        highlightInstance.OutlineColor = Color3.new(
+            math.min(currentCustomColor.R + 0.3, 1),
+            math.min(currentCustomColor.G + 0.3, 1),
+            math.min(currentCustomColor.B + 0.3, 1)
+        )
+    end
+
+    for _, att in ipairs(auraParticles) do
+        for _, child in ipairs(att:GetChildren()) do
+            if child:IsA("ParticleEmitter") then
+                child.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, currentCustomColor),
+                    ColorSequenceKeypoint.new(0.5, Color3.new(
+                        math.min(currentCustomColor.R + 0.4, 1),
+                        math.min(currentCustomColor.G + 0.4, 1),
+                        math.min(currentCustomColor.B + 0.4, 1)
+                    )),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
+                })
+            end
+        end
+    end
+end
+
+local function toggleAura()
+    auraActive = not auraActive
+    local char = player.Character
+    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+
+    if auraActive then
+        auraButton.Text = "ÖZEL AURA: ON"
+        TweenService:Create(auraButton, TweenInfo.new(0.2), {BackgroundColor3 = currentCustomColor}):Play()
+
+        if char then
+            highlightInstance = Instance.new("Highlight")
+            highlightInstance.Name = "CustomHighlight"
+            highlightInstance.Adornee = char
+            highlightInstance.FillColor = currentCustomColor
+            highlightInstance.FillTransparency = 0.6
+            highlightInstance.OutlineColor = Color3.new(1,1,1)
+            highlightInstance.OutlineTransparency = 0.1
+            highlightInstance.Parent = char
+
+            if rootPart then
+                for i = 1, 2 do
+                    local attachment = Instance.new("Attachment")
+                    attachment.Name = "FlameAttachment" .. i
+                    attachment.Position = Vector3.new(math.random(-1, 1), -2, math.random(-1, 1))
+                    attachment.Parent = rootPart
+
+                    local fire = Instance.new("ParticleEmitter")
+                    fire.Name = "FireParticle"
+                    fire.Lifetime = NumberRange.new(0.6, 1.2)
+                    fire.Rate = 25
+                    fire.Speed = NumberRange.new(4, 7)
+                    fire.SpreadAngle = Vector2.new(15, 15)
+                    fire.Acceleration = Vector3.new(0, 5, 0)
+                    fire.Parent = attachment
+
+                    table.insert(auraParticles, attachment)
+                end
+            end
+            updateAuraVisuals()
+        end
+    else
+        auraButton.Text = "ÖZEL AURA: OFF"
+        TweenService:Create(auraButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(65, 100, 220)}):Play()
+
+        if highlightInstance then
+            highlightInstance:Destroy()
+            highlightInstance = nil
+        end
+
+        for _, att in ipairs(auraParticles) do
+            if att then att:Destroy() end
+        end
+        auraParticles = {}
+    end
+end
+
+colorButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    colorIndex = colorIndex + 1
+    if colorIndex > #colorList then colorIndex = 1 end
+    
+    currentCustomColor = colorList[colorIndex].color
+    colorButton.Text = "RENK DEĞİŞTİR (" .. colorList[colorIndex].name .. ")"
+    updateAuraVisuals()
+end)
+
+--------------------------------------------------------------------------------
+-- HİLELER VE MISC ÖZELLİKLERİ
+--------------------------------------------------------------------------------
+local function toggleNoclip()
+    noclipActive = not noclipActive
+    if noclipActive then
+        noclipButton.Text = "NOCLIP: ON"
+        TweenService:Create(noclipButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 160, 90)}):Play()
+        noclipConnection = RunService.Stepped:Connect(function()
+            local char = player.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+            end
+        end)
+    else
+        noclipButton.Text = "NOCLIP: OFF"
+        TweenService:Create(noclipButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(65, 100, 220)}):Play()
+        if noclipConnection then noclipConnection:Disconnect() noclipConnection = nil end
+    end
+end
+
+local function toggleSuperJump()
+    superJumpActive = not superJumpActive
+    local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if superJumpActive then
+        jumpButton.Text = "SUPER JUMP: ON"
+        TweenService:Create(jumpButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 160, 90)}):Play()
+        if hum then hum.JumpPower = 150 end
+    else
+        jumpButton.Text = "SUPER JUMP: OFF"
+        TweenService:Create(jumpButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(65, 100, 220)}):Play()
+        if hum then hum.JumpPower = 50 end
+    end
+end
+
+local function toggleSpeedBoost()
+    speedBoostActive = not speedBoostActive
+    local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if speedBoostActive then
+        boostButton.Text = "SPEED BOOST: ON"
+        TweenService:Create(boostButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 160, 90)}):Play()
+        if hum then hum.WalkSpeed = 60 end
+    else
+        boostButton.Text = "SPEED BOOST: OFF"
+        TweenService:Create(boostButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(65, 100, 220)}):Play()
+        if hum then hum.WalkSpeed = 16 end
+    end
+end
+
+-- Infinite Jump
+UIS.JumpRequest:Connect(function()
+    if infiniteJumpActive then
+        local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end
+end)
+
+infJumpButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    infiniteJumpActive = not infiniteJumpActive
+    infJumpButton.Text = "INFINITE JUMP: " .. (infiniteJumpActive and "ON" or "OFF")
+    TweenService:Create(infJumpButton, TweenInfo.new(0.2), {BackgroundColor3 = infiniteJumpActive and Color3.fromRGB(40, 160, 90) or Color3.fromRGB(65, 100, 220)}):Play()
+end)
+
+-- Bhop
+bhopButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    bhopActive = not bhopActive
+    bhopButton.Text = "BHOP: " .. (bhopActive and "ON" or "OFF")
+    TweenService:Create(bhopButton, TweenInfo.new(0.2), {BackgroundColor3 = bhopActive and Color3.fromRGB(40, 160, 90) or Color3.fromRGB(65, 100, 220)}):Play()
+    
+    if bhopActive then
+        bHopConnection = RunService.RenderStepped:Connect(function()
+            local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+            if hum and hum.FloorMaterial ~= Enum.Material.Air then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    else
+        if bHopConnection then bHopConnection:Disconnect() bHopConnection = nil end
+    end
+end)
+
+-- Yerçekimi Ayarları (Gravity)
+gravityNormalBtn.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    Workspace.Gravity = 196.2
+end)
+
+gravityMoonBtn.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    Workspace.Gravity = 30
+end)
+
+gravityHeavyBtn.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    Workspace.Gravity = 500
+end)
+
+-- Görünmezlik
+invisButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    invisibleActive = not invisibleActive
+    invisButton.Text = "GÖRÜNMEZLİK: " .. (invisibleActive and "ON" or "OFF")
+    TweenService:Create(invisButton, TweenInfo.new(0.2), {BackgroundColor3 = invisibleActive and Color3.fromRGB(40, 160, 90) or Color3.fromRGB(65, 100, 220)}):Play()
+    
+    local char = player.Character
+    if char then
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+                part.Transparency = invisibleActive and 1 or 0
+            end
+        end
+    end
+end)
+
+-- Fullbright
+fullbrightButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    fullbrightActive = not fullbrightActive
+    fullbrightButton.Text = "FULLBRIGHT: " .. (fullbrightActive and "ON" or "OFF")
+    TweenService:Create(fullbrightButton, TweenInfo.new(0.2), {BackgroundColor3 = fullbrightActive and Color3.fromRGB(40, 160, 90) or Color3.fromRGB(65, 100, 220)}):Play()
+    
+    local lighting = game:GetService("Lighting")
+    lighting.Brightness = fullbrightActive and 3 or 1
+    lighting.ClockTime = fullbrightActive and 14 or 12
+    lighting.GlobalShadows = not fullbrightActive
+end)
+
+-- FOV Changer
+fovButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    fovActive = not fovActive
+    fovButton.Text = "WIDESCREEN FOV: " .. (fovActive and "ON" or "OFF")
+    TweenService:Create(fovButton, TweenInfo.new(0.2), {BackgroundColor3 = fovActive and Color3.fromRGB(40, 160, 90) or Color3.fromRGB(65, 100, 220)}):Play()
+    camera.FieldOfView = fovActive and 110 or 70
+end)
+
+-- Spinbot
+spinButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    spinbotActive = not spinbotActive
+    spinButton.Text = "SPINBOT: " .. (spinbotActive and "ON" or "OFF")
+    TweenService:Create(spinButton, TweenInfo.new(0.2), {BackgroundColor3 = spinbotActive and Color3.fromRGB(40, 160, 90) or Color3.fromRGB(65, 100, 220)}):Play()
+    
+    if spinbotActive then
+        spinConnection = RunService.RenderStepped:Connect(function()
+            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(35), 0)
+            end
+        end)
+    else
+        if spinConnection then spinConnection:Disconnect() spinConnection = nil end
+    end
+end)
+
+-- Click TP (Ctrl + Click)
+clickTpButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    clickTpActive = not clickTpActive
+    clickTpButton.Text = "CLICK TP: " .. (clickTpActive and "ON" or "OFF")
+    TweenService:Create(clickTpButton, TweenInfo.new(0.2), {BackgroundColor3 = clickTpActive and Color3.fromRGB(40, 160, 90) or Color3.fromRGB(65, 100, 220)}):Play()
+    
+    if clickTpActive then
+        clickTpConnection = UIS.InputBegan:Connect(function(input, gpe)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 and UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+                local mouse = player:GetMouse()
+                if mouse.Target then
+                    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        root.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3, 0))
+                    end
+                end
+            end
+        end)
+    else
+        if clickTpConnection then clickTpConnection:Disconnect() clickTpConnection = nil end
+    end
+end)
+
+-- Float (Havada Asılı Kalma)
+floatButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    floatActive = not floatActive
+    floatButton.Text = "FLOAT: " .. (floatActive and "ON" or "OFF")
+    TweenService:Create(floatButton, TweenInfo.new(0.2), {BackgroundColor3 = floatActive and Color3.fromRGB(40, 160, 90) or Color3.fromRGB(65, 100, 220)}):Play()
+    
+    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if floatActive and root then
+        local bp = Instance.new("BodyPosition")
+        bp.Name = "FloatBP"
+        bp.MaxForce = Vector3.new(0, math.huge, 0)
+        bp.Position = root.Position
+        bp.Parent = root
+    else
+        if root and root:FindFirstChild("FloatBP") then
+            root.FloatBP:Destroy()
+        end
+    end
+end)
+
+resetCharButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.Health = 0 end
+end)
+
+noclipButton.MouseButton1Click:Connect(function() playSound(BUTTON_SOUND, 0.6) toggleNoclip() end)
+jumpButton.MouseButton1Click:Connect(function() playSound(BUTTON_SOUND, 0.6) toggleSuperJump() end)
+boostButton.MouseButton1Click:Connect(function() playSound(BUTTON_SOUND, 0.6) toggleSpeedBoost() end)
+
+--------------------------------------------------------------------------------
+-- ARKAPLAN RENGARENK (RGB) SİSTEMİ
+--------------------------------------------------------------------------------
+local function toggleRainbow()
+    rainbowActive = not rainbowActive
+
+    if rainbowActive then
+        rainbowButton.Text = "ARKAPLAN RENGARENK: ON"
+        TweenService:Create(rainbowButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(150, 40, 180)}):Play()
+
+        rainbowConnection = RunService.RenderStepped:Connect(function()
+            local hue = tick() % 5 / 5
+            frame.BackgroundColor3 = Color3.fromHSV(hue, 0.8, 0.8)
+        end)
+    else
+        rainbowButton.Text = "ARKAPLAN RENGARENK: OFF"
+        TweenService:Create(rainbowButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(65, 100, 220)}):Play()
+
+        if rainbowConnection then
+            rainbowConnection:Disconnect()
+            rainbowConnection = nil
+        end
+        frame.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
+    end
+end
+
+rainbowButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    toggleRainbow()
+end)
+
+--------------------------------------------------------------------------------
+-- ANİMASYON AKIŞI
+--------------------------------------------------------------------------------
+task.spawn(function()
+    task.wait(0.2)
+    loadStatus.Text = "Oyuncu verileri yükleniyor..."
+    TweenService:Create(barFill, TweenInfo.new(1.5, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 80, 1, 0)}):Play()
+    
+    task.wait(1.5)
+    loadStatus.Text = "Arayüz bileşenleri hazırlanıyor..."
+    TweenService:Create(barFill, TweenInfo.new(1.8, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 160, 1, 0)}):Play()
+    
+    task.wait(1.8)
+    loadStatus.Text = "Sistem aktif ediliyor..."
+    TweenService:Create(barFill, TweenInfo.new(1.5, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 230, 1, 0)}):Play()
+    
+    task.wait(1.5)
+    loadStatus.Text = "Hazır!"
+    task.wait(0.4)
+    
+    loadScreen:Destroy()
+    
+    welcomeContainer.Visible = true
+    playSound(OPENING_SOUND, 0.7)
+    
+    TweenService:Create(welcomeText, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {TextTransparency = 0}):Play()
+    TweenService:Create(avatarImage, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {ImageTransparency = 0}):Play()
+    
+    task.wait(5.0)
+    
+    TweenService:Create(welcomeText, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
+    TweenService:Create(avatarImage, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {ImageTransparency = 1}):Play()
+    task.wait(0.6)
+    welcomeContainer:Destroy()
+    
+    frame.Visible = true
+    playSound(OPENING_SOUND, 0.5)
+    
+    local popInfo = TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local fadeInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    
+    TweenService:Create(frame, popInfo, {
+        Size = UDim2.fromOffset(260, 310),
+        Position = UDim2.new(0.5, -130, 0.5, -155),
+        BackgroundTransparency = 0
+    }):Play()
+    
+    task.wait(0.1)
+    TweenService:Create(title, fadeInfo, {TextTransparency = 0}):Play()
+    TweenService:Create(close, fadeInfo, {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+    TweenService:Create(minimize, fadeInfo, {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+    
+    tabContainer.Visible = true
+    pageContainer.Visible = true
+end)
+
+--------------------------------------------------------------------------------
+-- UÇUŞ SİSTEMİ
+--------------------------------------------------------------------------------
+local function stopFly()
+    flying = false
+
+    if connection then
+        connection:Disconnect()
+        connection = nil
+    end
+
+    if bv then bv:Destroy() bv = nil end
+    if bg then bg:Destroy() bg = nil end
+
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+    if hum then hum.PlatformStand = false end
+
+    flyButton.Text = "FLY: OFF"
+end
+
+local function startFly()
+    local char = player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+    if not root or not hum then return end
+
+    stopFly()
+    flying = true
+    hum.PlatformStand = true
+    flyButton.Text = "FLY: ON"
+
+    bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+    bv.Parent = root
+
+    bg = Instance.new("BodyGyro")
+    bg.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
+    bg.Parent = root
+
+    connection = RunService.RenderStepped:Connect(function()
+        if not flying or not root.Parent then
+            stopFly()
+            return
+        end
+
+        local move = Vector3.zero
+
+        if UIS:IsKeyDown(Enum.KeyCode.W) then move += camera.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then move -= camera.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then move -= camera.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then move += camera.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.yAxis end
+        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.yAxis end
+
+        if UIS.TouchEnabled then
+            move += hum.MoveDirection
+        end
+
+        bv.Velocity = move.Magnitude > 0 and move.Unit * speed or Vector3.zero
+        bg.CFrame = camera.CFrame
+    end)
+end
+
+flyButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    if flying then stopFly() else startFly() end
+end)
+
+plusButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    speed = math.min(speed + 10, 300)
+    speedLabel.Text = "Speed: " .. speed
+end)
+
+minusButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    speed = math.max(speed - 10, 10)
+    speedLabel.Text = "Speed: " .. speed
+end)
+
+auraButton.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    toggleAura()
+end)
+
+-- Küçült / büyüt
+minimize.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    minimized = not minimized
+
+    if minimized then
+        tabContainer.Visible = false
+        pageContainer.Visible = false
+
+        frame.Size = UDim2.fromOffset(150, 40)
+        title.Size = UDim2.new(1, -70, 1, 0)
+        title.Position = UDim2.fromOffset(5, 0)
+        minimize.Text = "+"
+        minimize.Position = UDim2.new(1, -62, 0, 5)
+        close.Position = UDim2.new(1, -32, 0, 5)
+    else
+        frame.Size = UDim2.fromOffset(260, 310)
+        title.Size = UDim2.new(1, -90, 0, 35)
+        title.Position = UDim2.fromOffset(10, 3)
+
+        tabContainer.Visible = true
+        pageContainer.Visible = true
+
+        minimize.Text = "−"
+        minimize.Position = UDim2.new(1, -62, 0, 5)
+        close.Position = UDim2.new(1, -32, 0, 5)
+    end
+end)
+
+close.MouseButton1Click:Connect(function()
+    playSound(BUTTON_SOUND, 0.6)
+    stopFly()
+    if rainbowConnection then rainbowConnection:Disconnect() end
+    if noclipConnection then noclipConnection:Disconnect() end
+    if spinConnection then spinConnection:Disconnect() end
+    if clickTpConnection then clickTpConnection:Disconnect() end
+    if bHopConnection then bHopConnection:Disconnect() end
+    if highlightInstance then highlightInstance:Destroy() end
+    gui:Destroy()
+end)
+
+player.CharacterAdded:Connect(function(char)
+    stopFly()
+    if superJumpActive then
+        local hum = char:WaitForChild("Humanoid", 5)
+        if hum then hum.JumpPower = 150 end
+    end
+    if speedBoostActive then
+        local hum = char:WaitForChild("Humanoid", 5)
+        if hum then hum.WalkSpeed = 60 end
+    end
+end)
