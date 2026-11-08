@@ -312,7 +312,7 @@ local jumpButton = button("SUPER JUMP: OFF", 32, page2)
 local boostButton = button("SPEED BOOST: OFF", 64, page2)
 
 --------------------------------------------------------------------------------
--- SAYFA 3 İÇERİĞİ (Info / Yapımcı - Sahibi & Yapımcısı: Aras, Kodlayıcısı: Samet)
+-- SAYFA 3 İÇERİĞİ (Info)
 --------------------------------------------------------------------------------
 local infoTitle = Instance.new("TextLabel")
 infoTitle.Size = UDim2.new(1, 0, 0, 22)
@@ -740,7 +740,7 @@ minimize.MouseButton1Click:Connect(function()
     else
         frame.Size = UDim2.fromOffset(260, 310)
         title.Size = UDim2.new(1, -90, 0, 35)
-        title.Position = UDim2.fromOffset(10, 3)
+        title.Position = UDim2.new(10, 3)
 
         tabContainer.Visible = true
         pageContainer.Visible = true
